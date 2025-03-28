@@ -6,4 +6,4 @@ from rest_framework.response import Response
 
 def test_view(request):
     print(request)
-    return 
+    return Response('dasdsadsadsa')
