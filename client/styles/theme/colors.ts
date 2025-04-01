@@ -97,3 +97,31 @@ export const stormGrey = {
   900: '#212636',
   950: '#121621',
 } satisfies PaletteRange;
+
+export const greenShade = {
+  50: '#e3f9e5',
+  100: '#c1e7b2',
+  200: '#9ddf7e',
+  300: '#78d24b',
+  400: '#5bcf2a',
+  500: '#3fbf00',
+  600: '#32a800',
+  700: '#289600',
+  800: '#1f7e00',
+  900: '#166600',
+  950: '#0b3c00',
+} satisfies PaletteRange;
+
+export const redShade = {
+  50: '#fce4e4',
+  100: '#f9b2b2',
+  200: '#f76a6a',
+  300: '#f20101',
+  400: '#d70000',
+  500: '#b30000',
+  600: '#9a0000',
+  700: '#800000',
+  800: '#660000',
+  900: '#4d0000',
+  950: '#2b0000',
+} satisfies PaletteRange;

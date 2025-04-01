@@ -52,7 +52,7 @@ export function MainNav(): React.JSX.Element {
             >
               <ListIcon />
             </IconButton>
-            <Tooltip title="Search">
+            <Tooltip color='secondary' title="Search">
               <IconButton>
                 <MagnifyingGlassIcon />
               </IconButton>
@@ -63,13 +63,13 @@ export function MainNav(): React.JSX.Element {
               <LightDark />
             </Tooltip> */}
             <Tooltip title="Contacts">
-              <IconButton>
+              <IconButton color='secondary'>
                 <UsersIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="Notifications">
               <Badge badgeContent={4} color="success" variant="dot">
-                <IconButton>
+                <IconButton color='secondary'>
                   <BellIcon />
                 </IconButton>
               </Badge>
