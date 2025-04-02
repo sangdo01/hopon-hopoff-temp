@@ -80,7 +80,7 @@ const menu = [
 export default function Layout({ children }: LayoutProps) {
   return (
     <div>
-      <div className="bg-[url('https://hopon-hopoff.vn/wp-content/uploads/2017/01/new-header-e1503460071199.png')] bg-[#F20000] bg-no-repeat bg-cover bg-center fixed w-[100vw]">
+      <div className="bg-[url('https://hopon-hopoff.vn/wp-content/uploads/2017/01/new-header-e1503460071199.png')] bg-[#F20000] bg-no-repeat bg-cover bg-center fixed w-[100vw] z-[999]">
         <div className="px-[15vw] flex text-[14px] justify-between leading-[35px] text-white">
           <div className="py-[5px] gap-[20px] flex items-center">
             <p className="flex items-center gap-[5px]">
@@ -188,14 +188,15 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
         <div className="h-[40px] px-[15vw] flex items-center uppercase font-bold text-white gap-[20px]">
-          {menu.map((item) => {
+          {menu.map((item, index) => {
             return (
-              <div className="hover:cursor-pointer flex items-center h-[40px] group relative">
+              <div key={index} className="hover:cursor-pointer flex items-center h-[40px] group relative">
                 <p>{item.title}</p>
                 <div className="absolute top-[40px] scale-y-0 w-auto origin-top overflow-hidden group-hover:scale-y-100 transition-transform duration-300">
                   {item.children.map((child, index) => {
                     return (
                       <p
+                        key={index}
                         className="bg-[#F20000] hover:bg-white hover:text-[#F20000] min-w-[200px] px-[20px] text-nowrap h-[40px] flex items-center"
                         style={
                           {
