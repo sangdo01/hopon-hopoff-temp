@@ -12,7 +12,7 @@ class Role(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         ordering = ['name']
 
@@ -95,15 +95,20 @@ class City(models.Model):
 
 class Destination(models.Model):
     name = models.CharField(max_length=250)
-    type = models.ForeignKey(TourType, on_delete=models.CASCADE, related_name='destinations')
-    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='destinations')
+    type = models.ForeignKey(TourType, on_delete=models.CASCADE, related_name='destinations', null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name='destinations', null=True, blank=True)
     description = models.TextField(blank=True)
+    icon = models.CharField(max_length=100, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     
     def __str__(self):
         return f"{self.name} ({self.type.name})"
 
 #=================================== Tour =============================================
+
+class MeetingPoint(models.Model):
+    name = models.CharField(max_length=500)
+    link = models.URLField(max_length=500, blank=True, null=True)
 
 class Tour(models.Model):
     name = models.CharField(max_length=500)
@@ -118,13 +123,13 @@ class Tour(models.Model):
     # Thông tin địa điểm và phân loại
     tour_type  = models.ForeignKey(TourType, on_delete=models.DO_NOTHING)  # Trong nước/Nước ngoài
     destination = models.ForeignKey(Destination, on_delete=models.DO_NOTHING)  # Điểm đến cụ thể
+    meeting_point = models.ForeignKey(MeetingPoint, on_delete=models.DO_NOTHING, null=True, blank=True)
     
     # Thông tin tour
     image = models.ImageField(upload_to='tours/', null=True, blank=True)
     departure_time = models.TimeField() # Thời gian khởi hành
     dynamic_level = models.IntegerField(null=True, blank=True) # Độ năng động
     meeting_point = models.TextField(blank=True)  # Điểm hẹn
-    physicality = models.IntegerField(null=True, blank=True)
     
     # Social media
     facebook_url = models.URLField(max_length=500, blank=True, null=True)
@@ -336,6 +341,12 @@ class Payment(models.Model):
 #     def __str__(self):
 #         return f"Review for {self.tour.name} by {self.user.get_full_name()}"
 
+#===================================== Contact ===========================
+class Contact(models.Model):
+    email = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
 
 #===================================== Websit config ===========================
 class WebsiteConfig(models.Model):
