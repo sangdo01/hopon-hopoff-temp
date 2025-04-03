@@ -121,9 +121,9 @@ class Tour(models.Model):
     end_date = models.DateField()
     
     # Thông tin địa điểm và phân loại
-    tour_type  = models.ForeignKey(TourType, on_delete=models.DO_NOTHING)  # Trong nước/Nước ngoài
-    destination = models.ForeignKey(Destination, on_delete=models.DO_NOTHING)  # Điểm đến cụ thể
-    meeting_point = models.ForeignKey(MeetingPoint, on_delete=models.DO_NOTHING, null=True, blank=True)
+    tour_type  = models.ForeignKey(TourType, on_delete=models.SET_NULL, null=True)  # Trong nước/Nước ngoài
+    destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True)  # Điểm đến cụ thể
+    meeting_point = models.ForeignKey(MeetingPoint, on_delete=models.SET_NULL, null=True, blank=True)
     
     # Thông tin tour
     departure_time = models.TimeField() # Thời gian khởi hành
@@ -219,7 +219,7 @@ class Booking(models.Model):
     
     # Tour information
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, on_delete=models.DO_NOTHING)
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
     departure_date = models.DateTimeField()  # Ngày khởi hành
     
     booking_date = models.DateTimeField(auto_now_add=True)
@@ -375,7 +375,7 @@ class Post(models.Model):
     tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='posts')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='posts', null=True)
 
     def __str__(self):
         return self.title
@@ -417,4 +417,4 @@ class WebsiteConfig(models.Model):
     company_url = models.CharField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
