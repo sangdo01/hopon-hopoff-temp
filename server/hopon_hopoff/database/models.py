@@ -56,7 +56,54 @@ class UserRole(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.role.name}"
-
+    
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    # Thông tin cơ bản
+    phone_number = models.CharField(max_length=15)
+    country = models.CharField(max_length=100)
+    address = models.TextField(blank=True)
+    state = models.CharField(max_length=100)
+    
+    # Thông tin bổ sung
+    date_of_birth = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=[('M', 'Male'), ('F', 'Female')], null=True, blank=True)
+    
+    # Thông tin admin (nếu có)
+    department = models.CharField(max_length=100, blank=True)
+    position = models.CharField(max_length=100, blank=True)
+    is_super_admin = models.BooleanField(default=False)
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Profile"
+        verbose_name_plural = "Profiles"
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.user.email})"
+    
+    @property
+    def is_admin(self):
+        return self.user.is_staff
+    
+    @property
+    def is_customer(self):
+        return not self.user.is_staff
+    
+    def get_active_bookings(self):
+        return self.user.bookings.filter(status='active')
+    
+    def get_completed_bookings(self):
+        return self.user.bookings.filter(status='completed')
+    
+    def get_total_spent(self):
+        return self.user.bookings.filter(status='completed').aggregate(
+            total=models.Sum('final_price')
+        )['total'] or 0
 
 #=================================== Tour Categories =============================================
 class TourType(models.Model):
@@ -198,8 +245,8 @@ class TourImage(models.Model):
 #         return f"{self.tour.name} - Day {self.day_number}"
 
 #=================================== Booking Tour =============================================
-# Customer information (Billing details)
-class Customer(models.Model):
+class BookingInfo(models.Model):
+    booking = models.OneToOneField('Booking', on_delete=models.CASCADE, related_name='booking_info')
     phone_number = models.CharField(max_length=15)
     email = models.EmailField(max_length=255)
     full_name = models.CharField(max_length=200)
@@ -219,9 +266,8 @@ class Booking(models.Model):
     
     # Tour information
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='bookings')
     departure_date = models.DateTimeField()  # Ngày khởi hành
-    
     booking_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     notes = models.TextField(blank=True)
