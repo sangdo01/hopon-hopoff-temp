@@ -126,28 +126,24 @@ class Tour(models.Model):
     meeting_point = models.ForeignKey(MeetingPoint, on_delete=models.DO_NOTHING, null=True, blank=True)
     
     # Thông tin tour
-    image = models.ImageField(upload_to='tours/', null=True, blank=True)
     departure_time = models.TimeField() # Thời gian khởi hành
     dynamic_level = models.IntegerField(null=True, blank=True) # Độ năng động
     meeting_point = models.TextField(blank=True)  # Điểm hẹn
-    
-    # Social media
-    facebook_url = models.URLField(max_length=500, blank=True, null=True)
-    instagram_url = models.URLField(max_length=500, blank=True, null=True)
-    linkedin_url = models.URLField(max_length=500, blank=True, null=True)
-    twitter_url = models.URLField(max_length=500, blank=True, null=True)
     
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
     is_new = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
     
     def __str__(self):
         return self.name
-    
-    class Meta:
-        ordering = ['-created_at']  # Sắp xếp theo thời gian tạo mới nhất
+        
+    def get_main_image(self):
+        return self.images.filter(is_main=True).first() # Sắp xếp theo thời gian tạo mới nhất
 
 # Loại vé
 class TicketType(models.Model):
@@ -163,7 +159,7 @@ class TicketType(models.Model):
         return self.name
     
     def calculate_price(self, base_price):
-        """Tính giá vé dựa trên phần trăm của giá gốc"""
+        """Calculate ticket price based on percentage of original price"""
         return base_price * (self.price_percentage / 100)
 
 # Giá vé theo từng loại
@@ -181,7 +177,7 @@ class TourPricing(models.Model):
 # Quản lý nhiều hình ảnh cho mỗi tour
 class TourImage(models.Model):
     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='tour_images/')
+    image = models.ImageField(upload_to='tours/')
     caption = models.CharField(max_length=200, blank=True)
     is_main = models.BooleanField(default=False)
     
@@ -261,7 +257,7 @@ class BookingItem(models.Model):
         return f"{self.quantity} x {self.booking.tour.name} - {self.ticket_type.name}"
     
     def save(self, *args, **kwargs):
-        """Tự động tính total_price khi lưu"""
+        """Automatically calculate total_price on save"""
         if not self.unit_price:
             self.unit_price = self.ticket_type.calculate_price(self.booking.tour.price)
         self.total_price = self.unit_price * self.quantity
@@ -340,6 +336,70 @@ class Payment(models.Model):
     
 #     def __str__(self):
 #         return f"Review for {self.tour.name} by {self.user.get_full_name()}"
+
+#===================================== Post ===========================
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True)  # URL thân thiện
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+    
+    def get_post_count(self):
+        """Count the number of posts in a category"""
+        return self.posts.count()
+    
+class Tag(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+class Post(models.Model):
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    excerpt = models.TextField(blank=True)  # Tóm tắt bài viết
+    views = models.PositiveIntegerField(default=0)  # Số lượt xem
+    categories = models.ManyToManyField(Category, related_name='posts')  # Nhiều thể loại cho một bài viết
+    tags = models.ManyToManyField(Tag, related_name='posts', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='posts')
+
+    def __str__(self):
+        return self.title
+    
+    def get_main_image(self):
+        return self.images.filter(is_main=True).first()
+    
+    def increase_views(self):
+        self.views += 1
+        self.save(update_fields=['views'])
+
+class PostImage(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='posts/')
+    caption = models.CharField(max_length=200, blank=True)
+    is_main = models.BooleanField(default=False)  # Hình ảnh chính
+    order = models.IntegerField(default=0)  # Thứ tự hiển thị
+    
+    class Meta:
+        ordering = ['order', 'id']
+    
+    def __str__(self):
+        return f"Image for {self.post.title}"
+
 
 #===================================== Contact ===========================
 class Contact(models.Model):
