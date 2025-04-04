@@ -79,8 +79,6 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Profile"
-        verbose_name_plural = "Profiles"
         ordering = ['-created_at']
     
     def __str__(self):
@@ -464,3 +462,107 @@ class WebsiteConfig(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+#===================================== Menu and Pages ===========================
+# class Menu(models.Model):
+#     name = models.CharField(max_length=100)
+#     slug = models.SlugField(max_length=100, unique=True)
+#     is_active = models.BooleanField(default=True)
+#     order = models.IntegerField(default=0)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     class Meta:
+#         ordering = ['order']
+#         verbose_name = "Menu"
+#         verbose_name_plural = "Menus"
+
+#     def __str__(self):
+#         return self.name
+
+class MenuItem(models.Model):
+    # menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name='items')
+    title = models.CharField(max_length=100)
+    url = models.CharField(max_length=200, blank=True)
+    page = models.ForeignKey('Page', on_delete=models.SET_NULL, null=True, blank=True, related_name='menu_items')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.title
+
+    def get_url(self):
+        if self.page:
+            return self.page.get_absolute_url()
+        return self.url
+
+class Page(models.Model):
+    LAYOUT_CHOICES = [
+        ('default', 'Default Layout'),
+        ('full_width', 'Full Width'),
+        ('sidebar_left', 'Sidebar Left'),
+        ('sidebar_right', 'Sidebar Right'),
+        ('two_columns', 'Two Columns'),
+    ]
+
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+    content = models.TextField()
+    layout = models.CharField(max_length=20, choices=LAYOUT_CHOICES, default='default')
+    meta_title = models.CharField(max_length=200, blank=True)
+    meta_description = models.TextField(blank=True)
+    meta_keywords = models.CharField(max_length=200, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_homepage = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_pages')
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        if self.is_homepage:
+            return '/'
+        return f'/{self.slug}/'
+
+    def save(self, *args, **kwargs):
+        # Ensure only one page can be homepage
+        if self.is_homepage:
+            Page.objects.filter(is_homepage=True).exclude(pk=self.pk).update(is_homepage=False)
+        super().save(*args, **kwargs)
+
+class PageBlock(models.Model):
+    BLOCK_TYPE_CHOICES = [
+        ('text', 'Text Block'),
+        ('image', 'Image Block'),
+        ('gallery', 'Gallery Block'),
+        ('video', 'Video Block'),
+        ('form', 'Form Block'),
+        ('map', 'Map Block'),
+        ('custom', 'Custom HTML'),
+    ]
+
+    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='blocks')
+    title = models.CharField(max_length=200)
+    block_type = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES)
+    content = models.TextField()
+    order = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.title} ({self.block_type})"

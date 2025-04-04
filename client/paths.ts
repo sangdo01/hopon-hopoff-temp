@@ -1,12 +1,12 @@
 export const paths = {
-  home: '/',
-  auth: { signIn: '/auth/sign-in', signUp: '/auth/sign-up', resetPassword: '/auth/reset-password' },
+  home: 'admin/',
+  auth: { signIn: '/admin/auth/sign-in', signUp: '/admin/auth/sign-up', resetPassword: '/admin/auth/reset-password' },
   dashboard: {
-    overview: '/dashboard',
-    account: '/dashboard/account',
-    customers: '/dashboard/customers',
-    integrations: '/dashboard/integrations',
-    settings: '/dashboard/settings',
+    overview: '/admin/dashboard',
+    account: '/admin/dashboard/account',
+    customers: '/admin/dashboard/customers',
+    integrations: '/admin/dashboard/integrations',
+    settings: '/admin/dashboard/settings',
   },
   errors: { notFound: '/errors/not-found' },
 } as const;
