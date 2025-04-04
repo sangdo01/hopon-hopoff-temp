@@ -1,19 +1,21 @@
-import * as React from 'react';
+import React, { ReactNode } from "react";
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import GlobalStyles from '@mui/material/GlobalStyles';
+import { ThemeProvider } from "@/components/core/theme-provider/theme-provider";
+import { AuthGuard } from "@/components/auth/auth-guard";
+import { SideNav } from "@/components/layouts/admin/side-nav";
+import { MainNav } from "@/components/layouts/admin/main-nav";
 
-import { AuthGuard } from '@/components/auth/auth-guard';
-import { MainNav } from '@/components/dashboard/layout/main-nav';
-import { SideNav } from '@/components/dashboard/layout/side-nav';
+export const metadata = {
+  title: "Hop On Hop Off",
+  description: "Admin dashboard for managing the Hop On Hop Off platform",
+};
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export default function Layout({ children }: LayoutProps): React.JSX.Element {
+const AdminLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <AuthGuard>
+    <ThemeProvider>
+      <AuthGuard>
       <GlobalStyles
         styles={{
           body: {
@@ -46,5 +48,8 @@ export default function Layout({ children }: LayoutProps): React.JSX.Element {
         </Box>
       </Box>
     </AuthGuard>
+    </ThemeProvider>
   );
-}
+};
+
+export default AdminLayout;
