@@ -6,7 +6,7 @@ import { shadows } from './shadows';
 import type { Theme } from './types';
 import { typography } from './typography';
 
-declare module '@mui/material/styles/createPalette' {
+// declare module '@mui/material/styles/createPalette' {
   interface PaletteRange {
     50: string;
     100: string;
@@ -34,7 +34,7 @@ declare module '@mui/material/styles/createPalette' {
     level2: string;
     level3: string;
   }
-}
+// }
 
 export function createTheme(): Theme {
   const theme = extendTheme({
@@ -44,7 +44,6 @@ export function createTheme(): Theme {
     shadows,
     shape: { borderRadius: 8 },
     typography,
-
     
   });
 
