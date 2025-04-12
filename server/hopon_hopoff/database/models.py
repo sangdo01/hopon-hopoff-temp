@@ -6,6 +6,9 @@ from django.utils import timezone
 
 #=================================== Role-Based Access Control =============================================
 class Role(models.Model):
+    """Vai trò của người dùng trong hệ thống (Quản trị viên, Người dùng, Khách hàng)"""
+    """Vai trò này sẽ được gán cho từng người dùng trong hệ thống"""
+    """Vi dụ: admin, staff, customer"""
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
@@ -20,6 +23,13 @@ class Role(models.Model):
         return self.name
 
 class Permission(models.Model):
+    """Các hành động có thể cấp quyền"""
+    """Quyền truy cập cho từng vai trò trong hệ thống"""
+    """Ví dụ: Quyền xem, sửa, xóa thông tin tour, booking, khách hàng"""
+    """Quyền này sẽ được gán cho từng vai trò trong hệ thống"""
+    """Nếu không có quyền này thì sẽ kiểm tra theo role"""
+    """Vi dụ: can_create_tour, can_read_tour, can_update_tour, can_delete_tour"""
+
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
@@ -37,6 +47,10 @@ class Permission(models.Model):
         return f"{self.module}.{self.action}"
 
 class RolePermission(models.Model):
+    """Gán các quyền cho từng vai trò"""
+    """Phân quyền cho từng vai trò"""
+    """Ví dụ: Vai trò quản trị viên có quyền xem, sửa, xóa thông tin tour"""
+    """Vai trò người dùng có quyền xem thông tin tour"""
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name='permissions')
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -48,14 +62,41 @@ class RolePermission(models.Model):
         return f"{self.role.name} - {self.permission.name}"
 
 class UserRole(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='roles')
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    """Gắn role với user"""
+    """Phân quyền cho từng người dùng"""
+    """Ví dụ: Người dùng A có quyền xem thông tin tour, booking"""
+    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='roles')
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         unique_together = ['user', 'role']
 
     def __str__(self):
         return f"{self.user.username} - {self.role.name}"
+    
+
+# RolePermission là mặc định
+# UserPermission là override → bạn viết code has_permission() ưu tiên kiểm tra bảng này trước.
+# Optional: user-permission override
+class UserPermission(models.Model):
+    """Gán quyền đặc biệt cho từng user"""
+    """Phân quyền cho từng người dùng"""
+    """Ví dụ: Người dùng A có quyền xem thông tin tour, booking"""
+    """Nếu không có quyền này thì sẽ kiểm tra theo role"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'permission')
+
+# User
+#  └───1-1───> UserProfile
+#                 └───N-1───> Role
+#                                    └───N-N───> Permission (via RolePermission)
+
+# User ─────N-N─────> Permission (via UserPermission)
+
     
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -480,89 +521,89 @@ class WebsiteConfig(models.Model):
 #     def __str__(self):
 #         return self.name
 
-class MenuItem(models.Model):
-    # menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name='items')
-    title = models.CharField(max_length=100)
-    url = models.CharField(max_length=200, blank=True)
-    page = models.ForeignKey('Page', on_delete=models.SET_NULL, null=True, blank=True, related_name='menu_items')
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
-    order = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+# class MenuItem(models.Model):
+#     # menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name='items')
+#     title = models.CharField(max_length=100)
+#     url = models.CharField(max_length=200, blank=True)
+#     page = models.ForeignKey('Page', on_delete=models.SET_NULL, null=True, blank=True, related_name='menu_items')
+#     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+#     order = models.IntegerField(default=0)
+#     is_active = models.BooleanField(default=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        ordering = ['order']
+#     class Meta:
+#         ordering = ['order']
 
-    def __str__(self):
-        return self.title
+#     def __str__(self):
+#         return self.title
 
-    def get_url(self):
-        if self.page:
-            return self.page.get_absolute_url()
-        return self.url
+#     def get_url(self):
+#         if self.page:
+#             return self.page.get_absolute_url()
+#         return self.url
 
-class Page(models.Model):
-    LAYOUT_CHOICES = [
-        ('default', 'Default Layout'),
-        ('full_width', 'Full Width'),
-        ('sidebar_left', 'Sidebar Left'),
-        ('sidebar_right', 'Sidebar Right'),
-        ('two_columns', 'Two Columns'),
-    ]
+# class Page(models.Model):
+#     LAYOUT_CHOICES = [
+#         ('default', 'Default Layout'),
+#         ('full_width', 'Full Width'),
+#         ('sidebar_left', 'Sidebar Left'),
+#         ('sidebar_right', 'Sidebar Right'),
+#         ('two_columns', 'Two Columns'),
+#     ]
 
-    title = models.CharField(max_length=200)
-    slug = models.SlugField(max_length=200, unique=True)
-    content = models.TextField()
-    layout = models.CharField(max_length=20, choices=LAYOUT_CHOICES, default='default')
-    meta_title = models.CharField(max_length=200, blank=True)
-    meta_description = models.TextField(blank=True)
-    meta_keywords = models.CharField(max_length=200, blank=True)
-    is_active = models.BooleanField(default=True)
-    is_homepage = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_pages')
+#     title = models.CharField(max_length=200)
+#     slug = models.SlugField(max_length=200, unique=True)
+#     content = models.TextField()
+#     layout = models.CharField(max_length=20, choices=LAYOUT_CHOICES, default='default')
+#     meta_title = models.CharField(max_length=200, blank=True)
+#     meta_description = models.TextField(blank=True)
+#     meta_keywords = models.CharField(max_length=200, blank=True)
+#     is_active = models.BooleanField(default=True)
+#     is_homepage = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_pages')
 
-    class Meta:
-        ordering = ['-created_at']
+#     class Meta:
+#         ordering = ['-created_at']
 
-    def __str__(self):
-        return self.title
+#     def __str__(self):
+#         return self.title
 
-    def get_absolute_url(self):
-        if self.is_homepage:
-            return '/'
-        return f'/{self.slug}/'
+#     def get_absolute_url(self):
+#         if self.is_homepage:
+#             return '/'
+#         return f'/{self.slug}/'
 
-    def save(self, *args, **kwargs):
-        # Ensure only one page can be homepage
-        if self.is_homepage:
-            Page.objects.filter(is_homepage=True).exclude(pk=self.pk).update(is_homepage=False)
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         # Ensure only one page can be homepage
+#         if self.is_homepage:
+#             Page.objects.filter(is_homepage=True).exclude(pk=self.pk).update(is_homepage=False)
+#         super().save(*args, **kwargs)
 
-class PageBlock(models.Model):
-    BLOCK_TYPE_CHOICES = [
-        ('text', 'Text Block'),
-        ('image', 'Image Block'),
-        ('gallery', 'Gallery Block'),
-        ('video', 'Video Block'),
-        ('form', 'Form Block'),
-        ('map', 'Map Block'),
-        ('custom', 'Custom HTML'),
-    ]
+# class PageBlock(models.Model):
+#     BLOCK_TYPE_CHOICES = [
+#         ('text', 'Text Block'),
+#         ('image', 'Image Block'),
+#         ('gallery', 'Gallery Block'),
+#         ('video', 'Video Block'),
+#         ('form', 'Form Block'),
+#         ('map', 'Map Block'),
+#         ('custom', 'Custom HTML'),
+#     ]
 
-    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='blocks')
-    title = models.CharField(max_length=200)
-    block_type = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES)
-    content = models.TextField()
-    order = models.IntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+#     page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name='blocks')
+#     title = models.CharField(max_length=200)
+#     block_type = models.CharField(max_length=20, choices=BLOCK_TYPE_CHOICES)
+#     content = models.TextField()
+#     order = models.IntegerField(default=0)
+#     is_active = models.BooleanField(default=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        ordering = ['order']
+#     class Meta:
+#         ordering = ['order']
 
-    def __str__(self):
-        return f"{self.title} ({self.block_type})"
+#     def __str__(self):
+#         return f"{self.title} ({self.block_type})"
