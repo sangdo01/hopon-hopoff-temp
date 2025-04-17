@@ -100,22 +100,13 @@ class UserPermission(models.Model):
     
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    # Thông tin cơ bản
     phone_number = models.CharField(max_length=15)
     country = models.CharField(max_length=100)
     address = models.TextField(blank=True)
     state = models.CharField(max_length=100)
-    
-    # Thông tin bổ sung
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=10, choices=[('M', 'Male'), ('F', 'Female')], null=True, blank=True)
-    
-    # Thông tin admin (nếu có)
-    department = models.CharField(max_length=100, blank=True)
-    position = models.CharField(max_length=100, blank=True)
-    is_super_admin = models.BooleanField(default=False)
-    
-    # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -412,15 +403,15 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment {self.id} - {self.booking.tour.name} - {self.amount}"
 
-# class Review(models.Model):
-#     tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='reviews')
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-#     comment = models.TextField()
-#     created_at = models.DateTimeField(auto_now_add=True)
+class Review(models.Model):
+    tour = models.ForeignKey(Tour, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
     
-#     def __str__(self):
-#         return f"Review for {self.tour.name} by {self.user.get_full_name()}"
+    def __str__(self):
+        return f"Review for {self.tour.name} by {self.user.get_full_name()}"
 
 #===================================== Post ===========================
 class Category(models.Model):

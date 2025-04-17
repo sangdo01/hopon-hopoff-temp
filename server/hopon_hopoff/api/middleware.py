@@ -1,9 +1,9 @@
-from database.models import User, UserProfile, Role, Permission, UserPermission, RolePermission
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+from database.models import User, Role, Permission, UserPermission, RolePermission, UserRole
 
 def has_permission(user, code):
     """
@@ -17,9 +17,9 @@ def has_permission(user, code):
     
     # Check through role
     try:
-        role = user.userprofile.role
+        role = user.userrole.role
         return RolePermission.objects.filter(role=role, permission__code=code).exists()
-    except UserProfile.role.RelatedObjectDoesNotExist:
+    except UserRole.role.RelatedObjectDoesNotExist:
         return False
     
 class PermissionMiddleware:

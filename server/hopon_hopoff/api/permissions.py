@@ -13,7 +13,7 @@ def HasPermission(code):
                 return True
             # Kiểm tra qua role
             try:
-                role = user.userprofile.role
+                role = user.userrole.role
                 return RolePermission.objects.filter(   
                     role=role, permission__code=code
                 ).exists()
