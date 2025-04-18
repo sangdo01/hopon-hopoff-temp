@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from database.models import Profile
-
+from api.ultils import format_datetime
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -9,11 +9,12 @@ class UserSerializer(serializers.ModelSerializer):
     """
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
-
+    date_joined = serializers.SerializerMethodField()
+    
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'password', 'password2']
-        read_only_fields = ['id']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'is_active', 'date_joined', 'password', 'password2']
+        read_only_fields = ['id', 'date_joined']
         extra_kwargs = {
             'username': {'required': True},
             'email': {'required': True},
@@ -22,6 +23,12 @@ class UserSerializer(serializers.ModelSerializer):
             'is_staff': {'required': False},
             'is_superuser': {'required': False},
         }
+
+    def get_date_joined(self, obj):
+        """
+        Get the date joined of the user.
+        """
+        return format_datetime(obj.date_joined)
 
     def validate(self, data):
         """
