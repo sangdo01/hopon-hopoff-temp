@@ -48,3 +48,30 @@ def format_datetime(datetime: str) -> str:
     except ValueError:
         return datetime
     
+def load_table_params(request) -> dict:
+    """
+    Load table parameters from request.
+    """
+    filters = request.GET.get("filter", "").slipt(",")
+    filter_obj = {}
+    oparator = "="
+    for filter in filters:
+        items = filter.split(oparator)
+        filter_obj[items[0]] = items[1]
+
+    params = {
+        "page": int(request.GET.get("page", 1)),
+        "limit": int(request.GET.get("limit", 10)),
+        "search": request.GET.get("search", ""),
+        "filters": filter_obj,
+        "sort_by": request.GET.get("sort_by", ""),
+        "sort_order": request.GET.get("sort_order", ""),
+    }
+    return params
+
+def get_UI_URL() -> str:
+    """
+    Get the UI URL from environment variables or use a default value.
+    """
+    return  "http://localhost:3000"
+    
