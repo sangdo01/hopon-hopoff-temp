@@ -2,12 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator, URLValidator
 from django.utils import timezone
-import secrets
+from django.utils.crypto import get_random_string
 import binascii
 import os
-from api.contants import REFRESH_TOKEN_EXPIRE_TIME
+from api.contants import REFRESH_TOKEN_EXPIRE_TIME, PASSWORD_RESET_TIMEOUT
 
 
+#=================================== Authentication =============================================
 class RefreshToken(models.Model):
     key = models.CharField(max_length=50, unique=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='refresh_tokens')
@@ -30,10 +31,33 @@ class RefreshToken(models.Model):
 
     def generate_key(self):
         # self.key = secrets.token_urlsafe(16)
-         return binascii.hexlify(os.urandom(20)).decode()
+        return binascii.hexlify(os.urandom(20)).decode()
 
     def is_expired(self):
         return timezone.now() > self.expires_at
+    
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.CharField(max_length=50, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        db_table = 'auth_password_reset_token'
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = self.generate_token()
+        if not self.expires_at:
+            # Token valid for 1 hour
+            self.expires_at = timezone.now() + timezone.timedelta(seconds=PASSWORD_RESET_TIMEOUT)
+        super().save(*args, **kwargs)
+
+    def generate_token(self):
+        return get_random_string(50)
 
 #=================================== Role-Based Access Control =============================================
 class Role(models.Model):

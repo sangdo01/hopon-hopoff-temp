@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
     date_joined = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'is_active', 'date_joined', 'password', 'password2']
@@ -75,11 +75,12 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class ProfileSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     avatar_url = serializers.ImageField(required=False, allow_null=True)
+    created_at = serializers.SerializerMethodField()
+    updated_at = serializers.SerializerMethodField()
     user = UserSerializer(read_only=True)
 
     class Meta:
@@ -98,6 +99,18 @@ class ProfileSerializer(serializers.ModelSerializer):
             # return self.context['request'].build_absolute_uri(obj.image.url)
             return obj.avatar.url
         return None
+    
+    def get_created_at(self, obj):
+        """
+        Get the created at date of the user.
+        """
+        return format_datetime(obj.created_at)
+    
+    def get_updated_at(self, obj):
+        """
+        Get the updated at date of the user.
+        """
+        return format_datetime(obj.updated_at)
 
     def get_permissions(self, obj):
         """
