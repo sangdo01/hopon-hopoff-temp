@@ -10,7 +10,8 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from api._serializers.user_serializers import UserSerializer, ProfileSerializer
 from database.models import Profile, RefreshToken, PasswordResetToken
-from api.ultils import app_response, get_UI_URL
+from api.ultils import app_response, get_UI_URL, load_table_params
+from api.controllers.user_controllers import process_user_data
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -193,9 +194,9 @@ class UserListView(APIView):
     def get(self, request):
         print('request.user', request.user)
         print('request.auth', request.auth)
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return app_response(True, serializer.data, status.HTTP_200_OK, len(serializer.data))
+        (page, page_size, search, sort_by, sort_order, filters) = load_table_params(request)
+        (data, total) = process_user_data(page, page_size, search, sort_by, sort_order, filters)
+        return app_response(True, data, status.HTTP_200_OK, total)
 
     def post(self, request):
         serializer = UserSerializer(data=request.data)
