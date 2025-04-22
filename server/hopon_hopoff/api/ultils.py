@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from api.contants import PAGE_SIZE
-
+import os
 
 def app_response(success: bool, data: dict, status: int = 200, total: int = 0) -> Response:
     """
@@ -21,7 +21,7 @@ def get_UI_URL() -> str:
     """
     Get the UI URL from environment variables or use a default value.
     """
-    return "http://localhost:3000"
+    return os.getenv("UI_URL_DOMAIN", "http://localhost:3000")
 
 def format_time(time: str) -> str:
     """

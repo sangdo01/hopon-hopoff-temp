@@ -11,9 +11,18 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+try:
+    dotenv_path = os.path.join(BASE_DIR, ".env.local")
+    load_dotenv(dotenv_path)
+except FileNotFoundError:
+    pass
 
 
 # Quick-start development settings - unsuitable for production
@@ -97,11 +106,11 @@ WSGI_APPLICATION = 'hopon_hopoff.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "hopon_hopoff_temp",
+        "NAME": os.getenv('DB_NAME'),
         "USER": "postgres",
-        "PASSWORD": "sang",
-        "HOST": "127.0.0.1",
-        "PORT": "5432",
+        "PASSWORD": os.getenv('DB_PASSWORD'),
+        "HOST": os.getenv('DB_HOST'),
+        "PORT": os.getenv('DB_PORT'),
     }
 }
 
@@ -161,7 +170,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'Replace with your email'  # Replace with your email
-EMAIL_HOST_PASSWORD = 'Replace with your email password'  # Replace with your email password
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # Replace with your email
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Replace with your email password
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Default from email address
