@@ -6,12 +6,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from api._serializers.user_serializers import UserSerializer, ProfileSerializer
 from database.models import Profile, RefreshToken, PasswordResetToken
 from api.ultils import app_response, get_UI_URL, load_table_params
 from api.controllers.user_controllers import process_user_data
+from django.conf import settings
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -30,10 +32,10 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
         # user = authenticate(username=username, password=password)
-        user = User.objects.filter(username=username).first()
+        user = User.objects.filter(email=email).first()
         if user and not user.check_password(password):
             return app_response(False, "Invalid credentials", status=status.HTTP_401_UNAUTHORIZED)
         if not user:
@@ -130,19 +132,30 @@ class ResetPasswordView(APIView):
             return app_response(False, "User with this email does not exist", status=status.HTTP_400_BAD_REQUEST)
         
         password_reset_token = PasswordResetToken.objects.create(user=user)
-        reset_link = f"{get_UI_URL}/profile/reset-password-confirm?token={password_reset_token.token}"
+        reset_link = f"{get_UI_URL()}/profile/reset-password-confirm?token={password_reset_token.token}"
 
         try:
-            send_mail(
-                'Password Reset Request',
-                f'Click the link to reset your password: {reset_link}',
-                "sangdo.dev23@gmail.com",
-                [email],
-                fail_silently=False,
+            subject = "Password Reset Request"
+            from_email = settings.DEFAULT_FROM_EMAIL
+            to = [email]
+            text_content = f'Click the link to reset your password: {reset_link}'
+            html_content = render_to_string(
+                'email/forgot-password.html',
+                {'reset_link': reset_link, 'full_name': user.get_full_name()}
             )
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+            # send_mail(
+            #     subject,
+            #     text_content,
+            #     from_email,
+            #     to,
+            #     fail_silently=False,
+            # )
         except Exception as e:
             print(f"Error sending email: {e}")
-            return app_response(False, "Failed to send email", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return app_response(False, f"Failed to send email: {e}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return app_response(True, "Password reset link sent to your email", status=status.HTTP_200_OK)
     
 class ResetPasswordConfirmView(APIView):
@@ -164,6 +177,10 @@ class ResetPasswordConfirmView(APIView):
         user.save()
 
         password_reset_token.delete()  # Delete the token after use
+
+        password_reset_token_user = PasswordResetToken.objects.filter(user=user)
+        if password_reset_token_user.exists():
+            password_reset_token_user.delete()
         # Optionally
         RefreshToken.objects.filter(user=user).delete()
         # Optionally

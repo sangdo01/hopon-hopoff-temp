@@ -21,7 +21,7 @@ def get_UI_URL() -> str:
     """
     Get the UI URL from environment variables or use a default value.
     """
-    return  "http://localhost:3000"
+    return "http://localhost:3000"
 
 def format_time(time: str) -> str:
     """
