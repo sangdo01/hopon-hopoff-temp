@@ -209,6 +209,7 @@ class UserListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        # test commit
         print('request.user', request.user)
         print('request.auth', request.auth)
         (page, page_size, search, sort_by, sort_order, filters) = load_table_params(request)
